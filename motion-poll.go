@@ -69,8 +69,9 @@ func main() {
 			if err != nil {
 				fmt.Printf("there was an error while posting the slack notification %s", err)
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(10 * time.Second)
 		}
+		time.Sleep(1 * time.Second)
 	}
 
 }
