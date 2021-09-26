@@ -1,7 +1,5 @@
 module path-variable.com/onvif
 
-go 1.14
+go 1.17
 
 require github.com/use-go/onvif v0.0.1
-
-require github.com/gorilla/mux v1.8.0

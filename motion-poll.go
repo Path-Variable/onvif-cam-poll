@@ -32,13 +32,13 @@ func main() {
 	}
 
 	// make initial pull point subscription
-	balcony, _ := onvif.NewDevice(args[0])
-	balcony.Authenticate(args[1], args[2])
+	cam, _ := onvif.NewDevice(args[0])
+	cam.Authenticate(args[1], args[2])
 	res2 := &event.CreatePullPointSubscription{ SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
 		InitialTerminationTime: event.AbsoluteOrRelativeTimeType {
 		Duration: "PT300S",
 	}}
-	_, err := balcony.CallMethod(res2)
+	_, err := cam.CallMethod(res2)
 	if err != nil {
 		fmt.Printf("Aborting due to err when subscribing %s", err)
 		return
@@ -59,7 +59,7 @@ func main() {
 
 	// continue polling for motion events. if motion is detected, send slack notification
 	for true {
-		r2, _ := balcony.CallMethod(event.PullMessages{})
+		r2, _ := cam.CallMethod(event.PullMessages{})
 		bodyBytes, _ := ioutil.ReadAll(r2.Body)
 		bodyS := string(bodyBytes)
 		if strings.Contains(bodyS, "<tt:SimpleItem Name=\"IsMotion\" Value=\"true\" />") {
