@@ -21,7 +21,7 @@ import (
      2 - password
      3 - camera name (or location)
      4 - slack hook url
-     5 - (optional) json message template for sprintf ex. ./scripts.sh "${<file.json}"
+     5 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
  */
 func main() {
 	// get and validate number of cli args
