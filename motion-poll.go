@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -21,7 +22,8 @@ import (
      2 - password
      3 - camera name (or location)
      4 - slack hook url
-     5 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
+     5 - (optional) cooldown time after motion event detected
+     6 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
  */
 func main() {
 	// get and validate number of cli args
@@ -57,6 +59,18 @@ func main() {
     `
 	}
 
+	//get cooldown time from args, default 10 seconds
+	cooldown := 10
+	if len(args) > 5 {
+		convInt, err := strconv.Atoi(args[5])
+		if err == nil {
+			cooldown = convInt
+		} else {
+			fmt.Printf("Could not parse cooldown time %s with error %s Defaulting to: %d\n", args[5], err, cooldown)
+		}
+	}
+
+
 	// continue polling for motion events. if motion is detected, send slack notification
 	for true {
 		r2, _ := cam.CallMethod(event.PullMessages{})
@@ -69,7 +83,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("there was an error while posting the slack notification %s", err)
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(time.Duration(cooldown) * time.Second)
 		}
 		time.Sleep(1 * time.Second)
 	}
