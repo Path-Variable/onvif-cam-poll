@@ -50,7 +50,7 @@ func main() {
 	camName := args[3]
 	var msgT string
 	if len(args) > 5 {
-		msgT = args[5]
+		msgT = args[6]
 	} else {
 		msgT = ` 
     	{
