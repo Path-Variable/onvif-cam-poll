@@ -49,7 +49,7 @@ func main() {
 	// get slack message from template - use default if cli arg is not given
 	camName := args[3]
 	var msgT string
-	if len(args) > 5 {
+	if len(args) > 6 {
 		msgT = args[6]
 	} else {
 		msgT = ` 
