@@ -2,13 +2,15 @@ package main
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/event"
+	"github.com/use-go/onvif/media"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +29,9 @@ import (
      6 - (optional) cooldown time after motion event detected
      7 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
  */
+
+const ssErrorTmplt = "Error while getting snapshot %s\n"
+
 func main() {
 	// get and validate number of cli args
 	args := os.Args[1:]
@@ -72,6 +77,16 @@ func main() {
 		}
 	}
 
+	r, err := cam.CallMethod(media.GetSnapshotUri{})
+	ssUrl := ""
+	if err != nil {
+		data, _ := ioutil.ReadAll(r.Body)
+		ssResp := media.GetSnapshotUriResponse{}
+		err = xml.Unmarshal(data, &ssResp)
+		if err == nil {
+			ssUrl = string(ssResp.MediaUri.Uri)
+		}
+	}
 
 	// continue polling for motion events. if motion is detected, send slack notification
 	for true {
@@ -84,7 +99,10 @@ func main() {
 			if err != nil {
 				fmt.Printf("there was an error while posting the slack notification %s", err)
 			}
-			captureScreenshot(args[0], args[1], args[2], args[5])
+			if ssUrl != "" {
+				getSnapshot(ssUrl, args[5])
+			}
+
 			time.Sleep(time.Duration(cooldown) * time.Second)
 		}
 		time.Sleep(1 * time.Second)
@@ -92,14 +110,23 @@ func main() {
 
 }
 
-func captureScreenshot(url, user, pass, imgPath string) {
-	path := fmt.Sprintf("%s/%s.jpeg",imgPath, time.Now().Format("20060102150405"))
-	curl := strings.Split(url, ":")[0]
-	rurl := fmt.Sprintf("rtsp://%s/user=%s_password=%s_channel=1_stream=1.sdp", curl, user, pass)
-	fmt.Printf("taking screenshot %s\n", rurl)
-	cmd := exec.Command("ffmpeg", "-y", "-i", rurl, "-vframes","1", path)
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("Screnshot error is %s", err)
+func getSnapshot(url, path string) {
+	r, e := http.Get(url)
+	if e != nil {
+		fmt.Printf(ssErrorTmplt, e)
+		return
+	}
+	defer r.Body.Close()
+
+	file,e := os.Create(fmt.Sprintf("%s/%s.jpeg",path, time.Now().Format("20060102150405")))
+	if e != nil {
+		fmt.Printf(ssErrorTmplt, e)
+		return
+	}
+	defer file.Close()
+
+	_, e = io.Copy(file, r.Body)
+	if e != nil {
+		fmt.Printf(ssErrorTmplt, e)
 	}
 }
