@@ -2,11 +2,10 @@ package main
 
 import (
 	"bytes"
-	"encoding/xml"
 	"fmt"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/event"
-	"github.com/use-go/onvif/media"
+	"gopkg.in/xmlpath.v2"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 	"strings"
 	"time"
 )
-
 
 /**
  Script for polling an ONVIF camera and getting motion events - specifically designed for Hisseu cameras
@@ -28,9 +26,21 @@ import (
 	 5 - snapshot save path
      6 - (optional) cooldown time after motion event detected
      7 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
- */
+*/
 
 const ssErrorTmplt = "Error while getting snapshot %s\n"
+
+const soap = `
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+xmlns:tt="http://www.onvif.org/ver10/schema">
+  <soap:Body>
+    <trt:GetSnapshotUri >     
+      <trt:ProfileToken>%s</trt:ProfileToken>
+    </trt:GetSnapshotUri>
+  </soap:Body>
+</soap:Envelope>
+`
 
 func main() {
 	// get and validate number of cli args
@@ -43,11 +53,11 @@ func main() {
 	// make initial pull point subscription
 	cam, _ := onvif.NewDevice(args[0])
 	cam.Authenticate(args[1], args[2])
-	res2 := &event.CreatePullPointSubscription{ SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
-		InitialTerminationTime: event.AbsoluteOrRelativeTimeType {
-		Duration: "PT300S",
-	}}
-	_, err := cam.CallMethod(res2)
+	res := &event.CreatePullPointSubscription{SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
+		InitialTerminationTime: event.AbsoluteOrRelativeTimeType{
+			Duration: "PT300S",
+		}}
+	_, err := cam.CallMethod(res)
 	if err != nil {
 		fmt.Printf("Aborting due to err when subscribing %s", err)
 		return
@@ -77,16 +87,17 @@ func main() {
 		}
 	}
 
-	r, err := cam.CallMethod(media.GetSnapshotUri{})
+	r, err := http.Post(fmt.Sprintf("http://%s", args[0]), "application/soap+xml", strings.NewReader(fmt.Sprintf(soap, "000")))
 	ssUrl := ""
-	if err != nil {
+	path := xmlpath.MustCompile("//*/Uri")
+	if err == nil {
 		data, _ := ioutil.ReadAll(r.Body)
-		ssResp := media.GetSnapshotUriResponse{}
-		err = xml.Unmarshal(data, &ssResp)
+		root, _ := xmlpath.Parse(strings.NewReader(string(data)))
 		if err == nil {
-			ssUrl = string(ssResp.MediaUri.Uri)
+			ssUrl, _ = path.String(root)
 		}
 	}
+	fmt.Printf("Snapshot url is %s\n", ssUrl)
 
 	// continue polling for motion events. if motion is detected, send slack notification
 	for true {
@@ -118,7 +129,7 @@ func getSnapshot(url, path string) {
 	}
 	defer r.Body.Close()
 
-	file,e := os.Create(fmt.Sprintf("%s/%s.jpeg",path, time.Now().Format("20060102150405")))
+	file, e := os.Create(fmt.Sprintf("%s/%s.jpeg", path, time.Now().Format("20060102150405")))
 	if e != nil {
 		fmt.Printf(ssErrorTmplt, e)
 		return

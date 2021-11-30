@@ -2,7 +2,10 @@ module path-variable.com/onvif
 
 go 1.17
 
-require github.com/use-go/onvif v0.0.1
+require (
+	github.com/use-go/onvif v0.0.1
+	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
+)
 
 require (
 	github.com/beevik/etree v1.1.0 // indirect
