@@ -43,7 +43,7 @@ It must also be compiled beforehand.
 
 Example:
 
-    ./set-time http//my-camera-url:1234 admin nimda
+    ./set-time http://my-camera-url:1234 admin nimda
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.
