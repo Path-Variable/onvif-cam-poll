@@ -28,7 +28,7 @@ import (
      7 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
 */
 
-const ssErrorTmplt = "Error while getting snapshot %s\n"
+const ssErrorTemplate = "Error while getting snapshot %s\n"
 
 const soap = `
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
@@ -124,20 +124,20 @@ func main() {
 func getSnapshot(url, path string) {
 	r, e := http.Get(url)
 	if e != nil {
-		fmt.Printf(ssErrorTmplt, e)
+		fmt.Printf(ssErrorTemplate, e)
 		return
 	}
 	defer r.Body.Close()
 
 	file, e := os.Create(fmt.Sprintf("%s/%s.jpeg", path, time.Now().Format("20060102150405")))
 	if e != nil {
-		fmt.Printf(ssErrorTmplt, e)
+		fmt.Printf(ssErrorTemplate, e)
 		return
 	}
 	defer file.Close()
 
 	_, e = io.Copy(file, r.Body)
 	if e != nil {
-		fmt.Printf(ssErrorTmplt, e)
+		fmt.Printf(ssErrorTemplate, e)
 	}
 }
