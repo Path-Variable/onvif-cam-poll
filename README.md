@@ -10,11 +10,15 @@ One is polling - the client calls the device repeatedly and asks if any new even
 is a subscription model where the client leaves a callback url and the camera uses this url to post notifications when a new 
 event is created.
 
-Polling is the most common feature implemented and it is the one that is utilized here. The cameras I have used in the making 
-of this script dont support subscription.
+Polling is the most common feature implemented, and it is the one that is utilized here. The cameras I have used in the making 
+of this script don't support subscription.
 
-In order to use the polling script you must provide the mandatory arguments or the script will fail immiediately. These include the
+In order to use the polling script you must provide the mandatory arguments or the script will fail immediately. These include the
 base url of the camera, auth details and a slack webhook to which the notification will be posted.
+
+It is also possible to provide the cooldown time and give the slack channel and bot token. The script will then
+grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. There are more
+details in this guide [here](https://api.slack.com/methods/files.upload).
 
 The script was written in Go and therefore must be compiled into a native executable before use like so:
 
@@ -22,9 +26,9 @@ The script was written in Go and therefore must be compiled into a native execut
     
 After that we can use the compiled native executable. Example:
 
-    ./motion-poll http://my-camera-url:1234 admin nimda garden https://hooks.slack.com/my-fake-webook
+    ./motion-poll my-camera-url:1234 admin nimda garden https://hooks.slack.com/my-fake-webook 30 xoxb-slack-bot-token slack-channel-id
     
-With this command the script will keep running continuosly and polling the camera. After it finds a motion event,
+With this command the script will keep running continuously and polling the camera. After it finds a motion event,
 it will post to the slack url specified and identify the camera as "garden".
 
 ## set-time
@@ -33,7 +37,7 @@ The second script deals with another problem when opting to use these cameras wi
 If cut off from access to the cloud, the cameras' system clock quickly falls out of sync with the world clock and is unable to 
 contact an NTP server in order to correct itself. This script will continue updating the system clock with the local time of 
 the server in which the script is running every 30 minutes. Even with the low-cost nature of the clocks in these cameras, it is 
-enough to maintaing a sufficiently low drift for most surveillence purposes.
+enough to maintain a sufficiently low drift for most surveillance purposes.
 
 It requires only three arguments for usage - the url and port (seperated by semicolon), the username and the password.
 It must also be compiled beforehand.
@@ -43,7 +47,7 @@ It must also be compiled beforehand.
 
 Example:
 
-    ./set-time http://my-camera-url:1234 admin nimda
+    ./set-time my-camera-url:1234 admin nimda
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.

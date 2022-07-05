@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/slack-go/slack"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/event"
 	"gopkg.in/xmlpath.v2"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -23,9 +22,10 @@ import (
      2 - password
      3 - camera name (or location)
      4 - slack hook url
-	 5 - snapshot save path
-     6 - (optional) cooldown time after motion event detected
-     7 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
+     5 - (optional) cooldown time after motion event detected
+	 6 - (optional) slack bot token
+     7 - (optional) slack channel id
+     8 - (optional) json message template for sprintf ex. ./motion-poll "${<file.json}"
 */
 
 const ssErrorTemplate = "Error while getting snapshot %s\n"
@@ -63,23 +63,23 @@ func main() {
 		return
 	}
 
-	// get slack message from template - use default if cli arg is not given
+	// get Slack message from template - use default if cli arg is not given
 	camName := args[3]
-	var msgT string
+	var msgT, botToken, channelID string
 	if len(args) > 7 {
-		msgT = args[7]
+		botToken = args[6]
+		channelID = args[7]
+	}
+	if len(args) > 8 {
+		msgT = args[8]
 	} else {
-		msgT = ` 
-    	{
-			"text" : "Motion detected at %s"
-        }
-    `
+		msgT = "Motion detected at %s"
 	}
 
 	//get cooldown time from args, default 10 seconds
 	cooldown := 10
-	if len(args) > 6 {
-		convInt, err := strconv.Atoi(args[6])
+	if len(args) > 5 {
+		convInt, err := strconv.Atoi(args[5])
 		if err == nil {
 			cooldown = convInt
 		} else {
@@ -98,22 +98,22 @@ func main() {
 		}
 	}
 	fmt.Printf("Snapshot url is %s\n", ssUrl)
+	slackClient := slack.New(botToken)
 
-	// continue polling for motion events. if motion is detected, send slack notification
+	// continue polling for motion events. if motion is detected, send Slack notification
 	for true {
 		r2, _ := cam.CallMethod(event.PullMessages{})
 		bodyBytes, _ := ioutil.ReadAll(r2.Body)
 		bodyS := string(bodyBytes)
 		if strings.Contains(bodyS, "<tt:SimpleItem Name=\"IsMotion\" Value=\"true\" />") {
 			msg := fmt.Sprintf(msgT, camName)
-			_, err = http.Post(args[4], "aplication/json", bytes.NewReader([]byte(msg)))
+			err = slack.PostWebhook(args[4], &slack.WebhookMessage{Text: msg})
 			if err != nil {
 				fmt.Printf("there was an error while posting the slack notification %s", err)
 			}
-			if ssUrl != "" {
-				getSnapshot(ssUrl, args[5])
+			if ssUrl != "" && botToken != "" && channelID != "" {
+				getSnapshot(ssUrl, channelID, *slackClient)
 			}
-
 			time.Sleep(time.Duration(cooldown) * time.Second)
 		}
 		time.Sleep(1 * time.Second)
@@ -121,23 +121,26 @@ func main() {
 
 }
 
-func getSnapshot(url, path string) {
+func getSnapshot(url, channelID string, slackClient slack.Client) {
 	r, e := http.Get(url)
 	if e != nil {
 		fmt.Printf(ssErrorTemplate, e)
 		return
 	}
 	defer r.Body.Close()
-
-	file, e := os.Create(fmt.Sprintf("%s/%s.jpeg", path, time.Now().Format("20060102150405")))
 	if e != nil {
 		fmt.Printf(ssErrorTemplate, e)
 		return
 	}
-	defer file.Close()
 
-	_, e = io.Copy(file, r.Body)
-	if e != nil {
-		fmt.Printf(ssErrorTemplate, e)
+	_, err := slackClient.UploadFile(slack.FileUploadParameters{
+		Reader:   r.Body,
+		Filetype: "image/png",
+		Filename: fmt.Sprintf("%s.png", time.Now().Format("20060102150405")),
+		Channels: []string{channelID},
+	})
+
+	if err != nil {
+		fmt.Printf("error while posting snapshot %s", err)
 	}
 }
