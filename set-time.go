@@ -7,6 +7,7 @@ import (
 	"github.com/use-go/onvif/xsd"
 	onvif2 "github.com/use-go/onvif/xsd/onvif"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +30,14 @@ func main() {
 	cam, _ := onvif.NewDevice(args[0])
 	cam.Authenticate(args[1], args[2])
 
+	var interval = 30
+	if len(args) > 4 {
+		convInt, err := strconv.Atoi(args[4])
+		if err == nil {
+			interval = convInt
+		}
+	}
+
 	// set time again every 30 minutes
 	for true {
 		ct := time.Now()
@@ -37,7 +46,7 @@ func main() {
 			fmt.Printf("Could not set time. %s Exiting!\n", err)
 			return
 		}
-		time.Sleep(30 * time.Minute)
+		time.Sleep(time.Duration(interval) * time.Minute)
 	}
 
 }

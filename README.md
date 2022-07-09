@@ -36,10 +36,11 @@ it will post to the slack url specified and identify the camera as "garden".
 The second script deals with another problem when opting to use these cameras without a cloud provider - time synchronization.
 If cut off from access to the cloud, the cameras' system clock quickly falls out of sync with the world clock and is unable to 
 contact an NTP server in order to correct itself. This script will continue updating the system clock with the local time of 
-the server in which the script is running every 30 minutes. Even with the low-cost nature of the clocks in these cameras, it is 
+the server in which the script is running in regular intervals. Even with the low-cost nature of the clocks in these cameras, it is 
 enough to maintain a sufficiently low drift for most surveillance purposes.
 
-It requires only three arguments for usage - the url and port (seperated by semicolon), the username and the password.
+It requires four arguments for usage - the url and port (one string, seperated by semicolon), the username, the password and the
+interval time expressed in minutes as an integer. After interval expires, the time is set again.
 It must also be compiled beforehand.
 
     go build set-time.go
@@ -47,7 +48,7 @@ It must also be compiled beforehand.
 
 Example:
 
-    ./set-time my-camera-url:1234 admin nimda
+    ./set-time my-camera-url:1234 admin nimda 1
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.
