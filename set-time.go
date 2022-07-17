@@ -12,7 +12,7 @@ import (
 )
 
 /**
-Script for setting the date and time on an ONVIF camera- specifically designed for Hiseeu cameras
+Script for setting the date and time on an ONVIF camera- specifically designed for Hisseu cameras
 CLI args:
     0 - url and port, separated by semicolon
     1 - username
