@@ -38,7 +38,7 @@ func main() {
 		}
 	}
 
-	// set time again every 30 minutes
+	// repeat call after interval passes
 	for true {
 		ct := time.Now().Local()
 		_, err := cam.CallMethod(getOnvifDateTime(ct))
