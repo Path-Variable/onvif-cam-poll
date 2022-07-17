@@ -40,7 +40,7 @@ func main() {
 
 	// set time again every 30 minutes
 	for true {
-		ct := time.Now()
+		ct := time.Now().Local()
 		_, err := cam.CallMethod(getOnvifDateTime(ct))
 		if err != nil {
 			fmt.Printf("Could not set time. %s Exiting!\n", err)
