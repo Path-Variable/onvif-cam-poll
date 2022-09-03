@@ -44,7 +44,8 @@ func main() {
 	// repeat call after interval passes
 	for true {
 		ct := time.Now()
-		_, err := cam.CallMethod(getOnvifDateTime(ct))
+		req := getOnvifDateTime(ct)
+		_, err := cam.CallMethod(req)
 		if err != nil {
 			fmt.Printf("Could not set time. %s Exiting!\n", err)
 			return
@@ -55,10 +56,15 @@ func main() {
 }
 
 func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
+	_, ost := ct.Zone()
+	diff := time.Duration(-(ost/3600 - 1)) * time.Hour
+	ct = ct.Add(diff)
+
 	return device.SetSystemDateAndTime{
 		DaylightSavings: xsd.Boolean(ct.IsDST()),
 		TimeZone:        onvif2.TimeZone{TZ: xsd.Token(p_time.FormatTimeZone(ct))},
-		DateTimeType:    "Manual", UTCDateTime: onvif2.DateTime(struct {
+		DateTimeType:    "Manual",
+		UTCDateTime: onvif2.DateTime(struct {
 			Time onvif2.Time
 			Date onvif2.Date
 		}{Time: onvif2.Time(struct {
