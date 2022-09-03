@@ -56,8 +56,9 @@ func main() {
 
 func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
 	return device.SetSystemDateAndTime{
-		TimeZone:     onvif2.TimeZone{TZ: xsd.Token(p_time.FormatTimeZone(ct))},
-		DateTimeType: "Manual", UTCDateTime: onvif2.DateTime(struct {
+		DaylightSavings: xsd.Boolean(ct.IsDST()),
+		TimeZone:        onvif2.TimeZone{TZ: xsd.Token(p_time.FormatTimeZone(ct))},
+		DateTimeType:    "Manual", UTCDateTime: onvif2.DateTime(struct {
 			Time onvif2.Time
 			Date onvif2.Date
 		}{Time: onvif2.Time(struct {
