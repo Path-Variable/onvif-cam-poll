@@ -12,12 +12,14 @@ import (
 	"time"
 )
 
-/**
+/*
+*
 Script for setting the date and time on an ONVIF camera- specifically designed for Hisseu cameras
 CLI args:
-    0 - url and port, separated by semicolon
-    1 - username
-    2 - password
+
+	0 - url and port, separated by semicolon
+	1 - username
+	2 - password
 */
 func main() {
 	// get and validate number of cli args
@@ -41,7 +43,7 @@ func main() {
 
 	// repeat call after interval passes
 	for true {
-		ct := time.Now().Local()
+		ct := time.Now()
 		_, err := cam.CallMethod(getOnvifDateTime(ct))
 		if err != nil {
 			fmt.Printf("Could not set time. %s Exiting!\n", err)
