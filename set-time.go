@@ -56,8 +56,7 @@ func main() {
 }
 
 func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
-	_, ost := ct.Zone()
-	diff := time.Duration(-(ost/3600 - 1)) * time.Hour
+	diff := time.Duration(p_time.GetPosixOffset(ct)) * time.Hour
 	ct = ct.Add(diff)
 
 	return device.SetSystemDateAndTime{

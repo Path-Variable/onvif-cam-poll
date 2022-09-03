@@ -21,6 +21,7 @@ github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWm
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/isaric/go-posix-time v1.0.0 h1:xSXSuxn9PiP6wjSFu8/9DTfPZQH19yZsZHrsEezoT9s=
 github.com/isaric/go-posix-time v1.0.0/go.mod h1:obM8z4QYGl9iONV+vFO3N/u2iUC/oVv8Zf6r4UBxn7s=
+github.com/isaric/go-posix-time v1.1.0/go.mod h1:obM8z4QYGl9iONV+vFO3N/u2iUC/oVv8Zf6r4UBxn7s=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
