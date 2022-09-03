@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/isaric/go-posix-time/pkg/p_time"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/device"
 	"github.com/use-go/onvif/xsd"
@@ -52,16 +53,18 @@ func main() {
 }
 
 func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
-	return device.SetSystemDateAndTime{DateTimeType: "Manual", UTCDateTime: onvif2.DateTime(struct {
-		Time onvif2.Time
-		Date onvif2.Date
-	}{Time: onvif2.Time(struct {
-		Hour   xsd.Int
-		Minute xsd.Int
-		Second xsd.Int
-	}{Hour: xsd.Int(ct.Hour()), Minute: xsd.Int(ct.Minute()), Second: xsd.Int(ct.Second())}), Date: onvif2.Date(struct {
-		Year  xsd.Int
-		Month xsd.Int
-		Day   xsd.Int
-	}{Year: xsd.Int(ct.Year()), Month: xsd.Int(ct.Month()), Day: xsd.Int(ct.Day())})})}
+	return device.SetSystemDateAndTime{
+		TimeZone:     onvif2.TimeZone{TZ: xsd.Token(p_time.FormatTimeZone(ct))},
+		DateTimeType: "Manual", UTCDateTime: onvif2.DateTime(struct {
+			Time onvif2.Time
+			Date onvif2.Date
+		}{Time: onvif2.Time(struct {
+			Hour   xsd.Int
+			Minute xsd.Int
+			Second xsd.Int
+		}{Hour: xsd.Int(ct.Hour()), Minute: xsd.Int(ct.Minute()), Second: xsd.Int(ct.Second())}), Date: onvif2.Date(struct {
+			Year  xsd.Int
+			Month xsd.Int
+			Day   xsd.Int
+		}{Year: xsd.Int(ct.Year()), Month: xsd.Int(ct.Month()), Day: xsd.Int(ct.Day())})})}
 }

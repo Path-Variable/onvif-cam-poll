@@ -16,7 +16,7 @@ of this script don't support subscription.
 In order to use the polling script you must provide the mandatory arguments or the script will fail immediately. These include the
 base url of the camera, auth details and a slack webhook to which the notification will be posted.
 
-It is also possible to provide the cooldown time and give the slack channel and bot token. The script will then
+It is also possible to provide the cooldown time and give the Slack channel and bot token. The script will then
 grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. There are more
 details in this guide [here](https://api.slack.com/methods/files.upload).
 
