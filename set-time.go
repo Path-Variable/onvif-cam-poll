@@ -3,43 +3,32 @@ package main
 import (
 	"fmt"
 	"github.com/isaric/go-posix-time/pkg/p_time"
+	"github.com/jessevdk/go-flags"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/device"
 	"github.com/use-go/onvif/xsd"
 	onvif2 "github.com/use-go/onvif/xsd/onvif"
 	"os"
-	"strconv"
 	"time"
 )
 
 /*
 *
 Script for setting the date and time on an ONVIF camera- specifically designed for Hisseu cameras
-CLI args:
-
-	0 - url and port, separated by semicolon
-	1 - username
-	2 - password
 */
 func main() {
 	// get and validate number of cli args
-	args := os.Args[1:]
-	if len(args) < 3 {
-		fmt.Println("Not enough arguments given. There must be at least 3! Exiting!")
+	var opts timeOptions
+	_, err := flags.ParseArgs(&opts, os.Args)
+
+	if err != nil {
+		println("Invalid command line arguments! Exiting!")
 		return
 	}
 
 	// create device and authenticate
-	cam, _ := onvif.NewDevice(args[0])
-	cam.Authenticate(args[1], args[2])
-
-	var interval = 30
-	if len(args) > 4 {
-		convInt, err := strconv.Atoi(args[4])
-		if err == nil {
-			interval = convInt
-		}
-	}
+	cam, _ := onvif.NewDevice(opts.Host)
+	cam.Authenticate(opts.Username, opts.Password)
 
 	// repeat call after interval passes
 	for true {
@@ -50,7 +39,7 @@ func main() {
 			fmt.Printf("Could not set time. %s Exiting!\n", err)
 			return
 		}
-		time.Sleep(time.Duration(interval) * time.Minute)
+		time.Sleep(time.Duration(opts.Interval) * time.Minute)
 	}
 
 }
@@ -75,4 +64,11 @@ func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
 			Month xsd.Int
 			Day   xsd.Int
 		}{Year: xsd.Int(ct.Year()), Month: xsd.Int(ct.Month()), Day: xsd.Int(ct.Day())})})}
+}
+
+type timeOptions struct {
+	Username string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
+	Password string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
+	Host     string `short:"h" long:"host" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
+	Interval int    `short:"i" long:"interval" description:"The integer representing the number of minutes to pass between polls" required:"false" default:"10"`
 }
