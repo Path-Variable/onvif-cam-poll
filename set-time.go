@@ -22,12 +22,12 @@ func main() {
 	_, err := flags.ParseArgs(&opts, os.Args)
 
 	if err != nil {
-		println("Invalid command line arguments! Exiting!")
+		fmt.Printf("%s Exiting!", err)
 		return
 	}
 
 	// create device and authenticate
-	cam, _ := onvif.NewDevice(opts.Host)
+	cam, _ := onvif.NewDevice(opts.Address)
 	cam.Authenticate(opts.Username, opts.Password)
 
 	// repeat call after interval passes
@@ -69,6 +69,6 @@ func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
 type timeOptions struct {
 	Username string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
 	Password string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
-	Host     string `short:"h" long:"host" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
+	Address  string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
 	Interval int    `short:"i" long:"interval" description:"The integer representing the number of minutes to pass between polls" required:"false" default:"10"`
 }

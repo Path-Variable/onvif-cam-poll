@@ -38,12 +38,12 @@ func main() {
 	_, err := flags.ParseArgs(&opts, os.Args)
 
 	if err != nil {
-		println("Invalid command line arguments! Exiting!")
+		fmt.Printf("%s Exiting!\n", err)
 		return
 	}
 
 	// make initial pull point subscription
-	cam, _ := onvif.NewDevice(opts.Host)
+	cam, _ := onvif.NewDevice(opts.Address)
 	cam.Authenticate(opts.Username, opts.Password)
 	res := &event.CreatePullPointSubscription{SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
 		InitialTerminationTime: event.AbsoluteOrRelativeTimeType{
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// retrieve the snapshot url
-	r, err := http.Post(fmt.Sprintf("http://%s", opts.Host), "application/soap+xml", strings.NewReader(fmt.Sprintf(soap, "000")))
+	r, err := http.Post(fmt.Sprintf("http://%s", opts.Address), "application/soap+xml", strings.NewReader(fmt.Sprintf(soap, "000")))
 	ssUrl := ""
 	path := xmlpath.MustCompile("//*/Uri")
 	if err == nil {
@@ -118,11 +118,11 @@ func getAndUploadSnapshot(url, channelID string, slackClient slack.Client) {
 type options struct {
 	Username        string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
 	Password        string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
-	Host            string `short:"h" long:"host" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
+	Address         string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
 	CameraName      string `short:"n" long:"name" description:"The name or location of the ONVIF device that will appear in all notifications" required:"true"`
 	SlackHook       string `short:"s" long:"slack-hook" description:"The address of the slack hook to which notifications will be posted" required:"true"`
-	CooldownTimer   int    `short:"c" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"10"`
-	SlackChannelID  string `short:"cid" long:"channel-id" description:"The ID of the slack channel where snapshots will be posted if provided" required:"false"`
-	SlackBotToken   string `short:"bt" long:"bot-token" description:"The token for the slack bot that will upload a snapshot if provided" required:"false" default:"token"`
-	MessageTemplate string `short:"mt" long:"message-template" description:"The message template in JSON format to use for notifications instead of the default one" required:"false" default:"Motion detected at %s"`
+	CooldownTimer   int    `short:"t" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"10"`
+	SlackChannelID  string `short:"c" long:"channel-id" description:"The ID of the slack channel where snapshots will be posted if provided" required:"false"`
+	SlackBotToken   string `short:"b" long:"bot-token" description:"The token for the slack bot that will upload a snapshot if provided" required:"false" default:"token"`
+	MessageTemplate string `short:"m" long:"message-template" description:"The message template in JSON format to use for notifications instead of the default one" required:"false" default:"Motion detected at %s"`
 }
