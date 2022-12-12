@@ -1,4 +1,7 @@
 # onvif-cam-poll
+
+[![Go](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml)
+
 Two simple golang scripts that provide ONVIF motion event polling and time/date setting. The scripts were created to allow 
 the use of IP cameras without using a cloud service as a middle man between the user and the camera(s).
 
