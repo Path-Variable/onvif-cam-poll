@@ -26,7 +26,7 @@ The script was written in Go and therefore must be compiled into a native execut
     
 After that we can use the compiled native executable. Example:
 
-    ./motion-poll my-camera-url:1234 admin nimda garden https://hooks.slack.com/my-fake-webook 30 xoxb-slack-bot-token slack-channel-id
+    ./motion-poll -a my-camera-url:1234 -u admin -p nimda -n garden -s https://hooks.slack.com/my-fake-webook -t 30 -b xoxb-slack-bot-token -c slack-channel-id
     
 With this command the script will keep running continuously and polling the camera. After it finds a motion event,
 it will post to the slack url specified and identify the camera as "garden".
@@ -48,7 +48,7 @@ It must also be compiled beforehand.
 
 Example:
 
-    ./set-time my-camera-url:1234 admin nimda 1
+    ./set-time -a my-camera-url:1234 -u admin -p nimda -i 1
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.
