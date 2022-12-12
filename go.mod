@@ -4,7 +4,8 @@ go 1.19
 
 require (
 	github.com/isaric/go-posix-time v1.1.2
-	github.com/slack-go/slack v0.11.0
+	github.com/jessevdk/go-flags v1.4.0
+	github.com/slack-go/slack v0.11.4
 	github.com/use-go/onvif v0.0.1
 	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
 )
