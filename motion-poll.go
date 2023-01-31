@@ -5,7 +5,8 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/event"
-	"gopkg.in/xmlpath.v2"
+	"github.com/use-go/onvif/media"
+	sdk "github.com/use-go/onvif/sdk/media"
 
 	"fmt"
 	"io"
@@ -21,18 +22,6 @@ Script for polling an ONVIF camera and getting motion events - specifically desi
 
 const ssErrorTemplate = "Error while getting snapshot %s\n"
 
-const soap = `
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
-xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
-xmlns:tt="http://www.onvif.org/ver10/schema">
-  <soap:Body>
-    <trt:GetSnapshotUri >     
-      <trt:ProfileToken>%s</trt:ProfileToken>
-    </trt:GetSnapshotUri>
-  </soap:Body>
-</soap:Envelope>
-`
-
 func main() {
 	var opts options
 	_, err := flags.ParseArgs(&opts, os.Args)
@@ -43,8 +32,7 @@ func main() {
 	}
 
 	// make initial pull point subscription
-	cam, _ := onvif.NewDevice(opts.Address)
-	cam.Authenticate(opts.Username, opts.Password)
+	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
 	res := &event.CreatePullPointSubscription{SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
 		InitialTerminationTime: event.AbsoluteOrRelativeTimeType{
 			Duration: "PT300S",
@@ -56,16 +44,8 @@ func main() {
 	}
 
 	// retrieve the snapshot url
-	r, err := http.Post(fmt.Sprintf("http://%s", opts.Address), "application/soap+xml", strings.NewReader(fmt.Sprintf(soap, "000")))
-	ssUrl := ""
-	path := xmlpath.MustCompile("//*/Uri")
-	if err == nil {
-		data, _ := io.ReadAll(r.Body)
-		root, _ := xmlpath.Parse(strings.NewReader(string(data)))
-		if err == nil {
-			ssUrl, _ = path.String(root)
-		}
-	}
+	ssur, err := sdk.Call_GetSnapshotUri(nil, cam, media.GetSnapshotUri{ProfileToken: "000"})
+	ssUrl := string(ssur.MediaUri.Uri)
 	fmt.Printf("Snapshot url is %s\n", ssUrl)
 
 	slackClient := slack.New(opts.SlackBotToken)

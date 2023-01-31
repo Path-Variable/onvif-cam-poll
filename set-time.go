@@ -27,8 +27,7 @@ func main() {
 	}
 
 	// create device and authenticate
-	cam, _ := onvif.NewDevice(opts.Address)
-	cam.Authenticate(opts.Username, opts.Password)
+	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
 
 	// repeat call after interval passes
 	for true {
