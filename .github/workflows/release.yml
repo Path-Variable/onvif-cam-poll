@@ -1,3 +1,5 @@
+name: release
+
 on:
   release: 
     types: [created, edited]
@@ -30,7 +32,7 @@ jobs:
         goversion: "https://dl.google.com/go/go1.19.1.linux-amd64.tar.gz"
         project_path: "./cmd/motion-poll"
         binary_name: "motion-poll"
-        extra_files: LICENSE README.md
+        extra_files: LICENSE.txt README.md
     - name: release set-time
       uses: wangyoucao577/go-release-action@v1
       with:
@@ -40,4 +42,4 @@ jobs:
         goversion: "https://dl.google.com/go/go1.19.1.linux-amd64.tar.gz"
         project_path: "./cmd/set-time"
         binary_name: "set-time"
-        extra_files: LICENSE README.md
+        extra_files: LICENSE.txt README.md
