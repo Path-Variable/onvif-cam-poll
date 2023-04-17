@@ -1,6 +1,8 @@
 on:
   release: 
     types: [created, edited]
+  push:
+  
 
 jobs:
   releases-matrix:
