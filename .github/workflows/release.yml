@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  release: 
+    types: [created]
+  
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm64]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: arm64
+            goos: windows
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: release motion-poll
+      uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: "https://dl.google.com/go/go1.19.1.linux-amd64.tar.gz"
+        project_path: "./cmd/motion-poll"
+        binary_name: "motion-poll"
+        extra_files: LICENSE.txt README.md
+    - name: release set-time
+      uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: "https://dl.google.com/go/go1.19.1.linux-amd64.tar.gz"
+        project_path: "./cmd/set-time"
+        binary_name: "set-time"
+        extra_files: LICENSE.txt README.md

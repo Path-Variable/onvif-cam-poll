@@ -18,6 +18,6 @@ jobs:
       with:
         go-version: 1.19
     - name: Build motion-poll
-      run: go build -v motion-poll.go
+      run: go build -v ./cmd/motion-poll/motion-poll.go
     - name: Build set-time
-      run: go build -v set-time.go
+      run: go build -v ./cmd/set-time/set-time.go
