@@ -1,4 +1,4 @@
-package motion-poll
+package motion_poll
 
 import (
 	"github.com/jessevdk/go-flags"

@@ -1,4 +1,4 @@
-package set-time
+package set_time
 
 import (
 	"fmt"
