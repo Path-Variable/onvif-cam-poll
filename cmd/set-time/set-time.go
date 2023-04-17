@@ -1,4 +1,4 @@
-package cmd
+package set-time
 
 import (
 	"fmt"
