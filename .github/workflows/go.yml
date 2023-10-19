@@ -17,7 +17,5 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.19
-    - name: Build motion-poll
-      run: go build -v ./cmd/motion-poll/motion-poll.go
-    - name: Build set-time
-      run: go build -v ./cmd/set-time/set-time.go
+    - name: Build
+      run: go install ./...

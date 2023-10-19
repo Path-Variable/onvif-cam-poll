@@ -1,0 +1,1 @@
+/path/to/motion-poll -a ${CAMERA_ADDRESS} -u ${CAMERA_USER} -p ${CAMERA_PASSWORD} -n ${CAMERA_NAME} -s ${SLACK_WEBHOOK} -t 30 -b ${SLACK_BOT_TOKEN} -c ${SLACK_CHANNEL_ID}
