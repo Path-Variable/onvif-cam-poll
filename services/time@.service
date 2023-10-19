@@ -1,0 +1,16 @@
+[Unit]
+DefaultDependencies=no
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/home/your-user/motion-poll-services/%i.env
+Restart=always
+RestartSec=3
+User=isaric
+Group=isaric
+ExecStart=/bin/bash /home/your-user/motion-poll-services/time.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
