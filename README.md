@@ -55,3 +55,7 @@ Example:
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.
+
+## service templates
+Please check the services folder for examples of what a systemd service template should look like if you choose to run motion-poll or set-time as
+a service. By using environemnt files and templating, the user can handle multiple cameras with only one service file.
