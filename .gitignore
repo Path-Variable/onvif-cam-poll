@@ -1,4 +1,4 @@
 .idea
-motion-poll
-set-time
 .fleet
+./motion-poll
+./set-time
