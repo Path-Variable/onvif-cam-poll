@@ -2,8 +2,14 @@
 
 [![Go](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml)
 
-Two simple golang scripts that provide ONVIF motion event polling and time/date setting. The scripts were created to allow 
+Four golang scripts that provide ONVIF motion event polling and time/date setting. The scripts were created to allow 
 the use of IP cameras without using a cloud service as a middle man between the user and the camera(s).
+The script main files are located in the cmd folder.
+To install the scripts into your local gopath run:
+
+    go install ./...
+
+They will be placed inside the go/bin folder. Please make sure that GOPATH is defined beforehand.
 
 ## motion-poll
 
@@ -17,19 +23,15 @@ Polling is the most common feature implemented, and it is the one that is utiliz
 of this script don't support subscription.
 
 In order to use the polling script you must provide the mandatory arguments or the script will fail immediately. These include the
-base url of the camera, auth details and a slack webhook to which the notification will be posted.
+base url of the camera, auth details and a slack configuration for the bot we will use to post notifications.
 
-It is also possible to provide the cooldown time and give the Slack channel and bot token. The script will then
-grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. There are more
+The script will then grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. There are more
 details in this guide [here](https://api.slack.com/methods/files.upload).
 
-The script was written in Go and therefore must be compiled into a native executable before use like so:
-
-    go build motion-poll.go
     
 After that we can use the compiled native executable. Example:
 
-    ./motion-poll -a my-camera-url:1234 -u admin -p nimda -n garden -s https://hooks.slack.com/my-fake-webook -t 30 -b xoxb-slack-bot-token -c slack-channel-id
+    ./motion-poll -a my-camera-url:1234 -u admin -p nimda -n garden -t 30 -b xoxb-slack-bot-token -c slack-channel-id
     
 With this command the script will keep running continuously and polling the camera. After it finds a motion event,
 it will post to the slack url specified and identify the camera as "garden".
@@ -44,17 +46,32 @@ enough to maintain a sufficiently low drift for most surveillance purposes.
 
 It requires four arguments for usage - the url and port (one string, seperated by semicolon), the username, the password and the
 interval time expressed in minutes as an integer. After interval expires, the time is set again.
-It must also be compiled beforehand.
-
-    go build set-time.go
     
-
 Example:
 
-    ./set-time -a my-camera-url:1234 -u admin -p nimda -i 1
+    ./set-time -a my-camera-url:1234 -u admin -p nimda -t 1
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.
+
+## goto-preset
+
+The thrid script will move the camera to a predefined ptz preset. The purpose of this script is to counter tampering and accidental camera misalignment 
+due to power outages. Besides the authentication details, this script accepts the ptz preset name and the onvif profile name.
+
+Example:
+
+    ./goto-preset -a my-camera-url:1234 -u admin -p nimda -t 1 -l 001 -r 000
+
+## set-preset
+
+The fourth script will record a ptz preset for the current position of the camera. It requires the authenticatino details, the preset name and, optionally,
+the onvif profile name.
+
+Example:
+
+    ./set-preset -a my-camera-url:1234 -u admin -p nimda -l 003 -r 000
+
 
 ## service templates
 Please check the services folder for examples of what a systemd service template should look like if you choose to run motion-poll or set-time as
