@@ -51,7 +51,7 @@ func main() {
 			return
 		}
 		fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)
-		time.Sleep(time.Duration(opts.CooldownTimer) * time.Minute)
+		time.Sleep(time.Duration(opts.CooldownTimer) * time.Second)
 	}
 
 }

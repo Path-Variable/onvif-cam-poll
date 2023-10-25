@@ -18,7 +18,7 @@ type PresetParameters struct {
 }
 
 type CooldownParameters struct {
-	CooldownTimer   int    `short:"t" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"1"`
+	CooldownTimer   int    `short:"t" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"60"`
 }
 
 type CameraNameParameters struct {
