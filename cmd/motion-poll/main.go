@@ -68,6 +68,7 @@ func main() {
 			if ssUrl != "" && opts.SlackBotToken != "token" && opts.SlackChannelID != "" {
 				getAndUploadSnapshot(ssUrl, opts.SlackChannelID, *slackClient)
 			}
+			fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)
 			time.Sleep(time.Duration(opts.CooldownTimer) * time.Second)
 		}
 		time.Sleep(1 * time.Second)

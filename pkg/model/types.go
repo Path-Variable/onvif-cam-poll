@@ -8,8 +8,8 @@ type BasicParameters struct {
 }
 
 type SlackParameters struct {
-	SlackChannelID  string `short:"c" long:"channel-id" description:"The ID of the slack channel where snapshots will be posted if provided" required:"false"`
-	SlackBotToken   string `short:"b" long:"bot-token" description:"The token for the slack bot that will upload a snapshot if provided" required:"false" default:"token"`
+	SlackChannelID  string `short:"c" long:"channel-id" description:"The ID of the slack channel where snapshots will be posted if provided" required:"true"`
+	SlackBotToken   string `short:"b" long:"bot-token" description:"The token for the slack bot that will upload a snapshot if provided" required:"true"`
 	MessageTemplate string `short:"m" long:"message-template" description:"The message template in JSON format to use for notifications instead of the default one" required:"false" default:"Motion detected at %s"`
 }
 
