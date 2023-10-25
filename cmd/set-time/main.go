@@ -1,17 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
+
 	"github.com/isaric/go-posix-time/pkg/p_time"
+	"github.com/path-variable/onvif-cam-poll/pkg/model"
+	"github.com/path-variable/onvif-cam-poll/pkg/utils"
+
+	"os"
+	"time"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/device"
+	sdk "github.com/use-go/onvif/sdk/device"
 	"github.com/use-go/onvif/xsd"
 	onvif2 "github.com/use-go/onvif/xsd/onvif"
-	"os"
-	"time"
 )
 
+const commandName = "set-time"
 /*
 *
 Script for setting the date and time on an ONVIF camera- specifically designed for Hisseu cameras
@@ -22,23 +30,28 @@ func main() {
 	_, err := flags.ParseArgs(&opts, os.Args)
 
 	if err != nil {
-		fmt.Printf("%s Exiting!", err)
+		fmt.Printf(utils.ArgParseError, err)
 		return
 	}
 
 	// create device and authenticate
-	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
+	cam, err := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
+	if err != nil {
+		fmt.Printf(utils.ConnectionError, err)
+	}
 
 	// repeat call after interval passes
-	for true {
+	for {
 		ct := time.Now()
 		req := getOnvifDateTime(ct)
-		_, err := cam.CallMethod(req)
+		fmt.Printf(utils.CommandSend, commandName)
+		_, err := sdk.Call_SetSystemDateAndTime(context.TODO(), cam, req)
 		if err != nil {
-			fmt.Printf("Could not set time. %s Exiting!\n", err)
+			fmt.Printf(utils.CommandError,commandName, err)
 			return
 		}
-		time.Sleep(time.Duration(opts.Interval) * time.Minute)
+		fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)
+		time.Sleep(time.Duration(opts.CooldownTimer) * time.Minute)
 	}
 
 }
@@ -66,8 +79,6 @@ func getOnvifDateTime(ct time.Time) device.SetSystemDateAndTime {
 }
 
 type timeOptions struct {
-	Username string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
-	Password string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
-	Address  string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
-	Interval int    `short:"i" long:"interval" description:"The integer representing the number of minutes to pass between polls" required:"false" default:"10"`
+	model.BasicParameters
+	model.CooldownParameters
 }

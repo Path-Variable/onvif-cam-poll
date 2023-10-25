@@ -1,13 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+
+	"github.com/path-variable/onvif-cam-poll/pkg/model"
+	"github.com/path-variable/onvif-cam-poll/pkg/utils"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/ptz"
 	sdk_ptz "github.com/use-go/onvif/sdk/ptz"
-	"os"
+	token "github.com/use-go/onvif/xsd/onvif"
 )
+
+const commandName = "set-preset"
 
 /**
 Records the current camera position on the passed preset token
@@ -18,27 +26,29 @@ func main() {
 	_, err := flags.ParseArgs(&opts, os.Args)
 
 	if err != nil {
-		fmt.Printf("%s Exiting!\n", err)
+		fmt.Printf(utils.ArgParseError, err)
 		return
 	}
 
-	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
-	gtreq := ptz.SetPreset{
-		PresetToken:  "001",
-		ProfileToken: "000",
-	}
-
-	_, err = sdk_ptz.Call_SetPreset(nil, cam, gtreq)
+	cam, err := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
 	if err != nil {
-		fmt.Printf("Error while sending set preset command %s\nExiting!\n", err)
+		fmt.Printf(utils.ConnectionError, err)
+		return
+	}
+	gtreq := ptz.SetPreset{
+		PresetToken:  token.ReferenceToken(opts.PositionPreset),
+		ProfileToken: token.ReferenceToken(opts.Profile),
+	}
+	fmt.Printf(utils.CommandSend, commandName)
+	_, err = sdk_ptz.Call_SetPreset(context.TODO(), cam, gtreq)
+	if err != nil {
+		fmt.Printf(utils.CommandError,commandName, err)
 		return
 	}
 
 }
 
 type setPresetOptions struct {
-	Username       string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
-	Password       string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
-	Address        string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
-	PresetPosition string `short:"l" long:"point" description:"The ptz preset the camera should move to" required:"false" default:"001"`
+	model.BasicParameters
+	model.PresetParameters
 }

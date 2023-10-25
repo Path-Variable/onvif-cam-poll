@@ -1,4 +1,4 @@
-module path-variable.com/onvif
+module github.com/path-variable/onvif-cam-poll
 
 go 1.19
 

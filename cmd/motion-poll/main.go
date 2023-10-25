@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
+
 	"github.com/jessevdk/go-flags"
+	"github.com/path-variable/onvif-cam-poll/pkg/model"
+	"github.com/path-variable/onvif-cam-poll/pkg/utils"
 	"github.com/slack-go/slack"
 	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/event"
@@ -27,14 +31,14 @@ func main() {
 	_, err := flags.ParseArgs(&opts, os.Args)
 
 	if err != nil {
-		fmt.Printf("%s Exiting!\n", err)
+		fmt.Printf(utils.ArgParseError, err)
 		return
 	}
 
 	// make initial pull point subscription
 	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
 	res := &event.CreatePullPointSubscription{SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
-		InitialTerminationTime: event.AbsoluteOrRelativeTimeType{
+		InitialTerminationTime: event.AbsoluteOrRelativeTimeType {
 			Duration: "PT300S",
 		}}
 	_, err = cam.CallMethod(res)
@@ -44,20 +48,20 @@ func main() {
 	}
 
 	// retrieve the snapshot url
-	ssur, err := sdk.Call_GetSnapshotUri(nil, cam, media.GetSnapshotUri{ProfileToken: "000"})
+	ssur, _ := sdk.Call_GetSnapshotUri(context.TODO(), cam, media.GetSnapshotUri{ProfileToken: "000"})
 	ssUrl := string(ssur.MediaUri.Uri)
 	fmt.Printf("Snapshot url is %s\n", ssUrl)
 
 	slackClient := slack.New(opts.SlackBotToken)
 
 	// continue polling for motion events. if motion is detected, send Slack notification
-	for true {
+	for {
 		r2, _ := cam.CallMethod(event.PullMessages{})
 		bodyBytes, _ := io.ReadAll(r2.Body)
 		bodyS := string(bodyBytes)
 		if strings.Contains(bodyS, "<tt:SimpleItem Name=\"IsMotion\" Value=\"true\" />") {
 			msg := fmt.Sprintf(opts.MessageTemplate, opts.CameraName)
-			err = slack.PostWebhook(opts.SlackHook, &slack.WebhookMessage{Text: msg})
+			_, _, err = slackClient.PostMessage(opts.SlackChannelID, slack.MsgOptionText(msg, false))
 			if err != nil {
 				fmt.Printf("there was an error while posting the slack notification %s", err)
 			}
@@ -96,13 +100,8 @@ func getAndUploadSnapshot(url, channelID string, slackClient slack.Client) {
 }
 
 type options struct {
-	Username        string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
-	Password        string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
-	Address         string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
-	CameraName      string `short:"n" long:"name" description:"The name or location of the ONVIF device that will appear in all notifications" required:"true"`
-	SlackHook       string `short:"s" long:"slack-hook" description:"The address of the slack hook to which notifications will be posted" required:"true"`
-	CooldownTimer   int    `short:"t" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"10"`
-	SlackChannelID  string `short:"c" long:"channel-id" description:"The ID of the slack channel where snapshots will be posted if provided" required:"false"`
-	SlackBotToken   string `short:"b" long:"bot-token" description:"The token for the slack bot that will upload a snapshot if provided" required:"false" default:"token"`
-	MessageTemplate string `short:"m" long:"message-template" description:"The message template in JSON format to use for notifications instead of the default one" required:"false" default:"Motion detected at %s"`
+	model.BasicParameters
+	model.CameraNameParameters
+	model.CooldownParameters
+	model.SlackParameters
 }
