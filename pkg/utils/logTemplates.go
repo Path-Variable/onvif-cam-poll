@@ -2,7 +2,7 @@ package utils
 
 const ArgParseError = "Error while parsing CLI args %v\n"
 
-const SleepTemplate = "Sleeping for %d minutes\n"
+const SleepTemplate = "Sleeping for %d seconds\n"
 
 const ConnectionOK = "Connected to device %s\n"
 
