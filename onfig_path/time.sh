@@ -1,1 +1,0 @@
-set-time -a ${CAMERA_ADDRESS} -u admin -p ${CAMERA_PASSWORD}
