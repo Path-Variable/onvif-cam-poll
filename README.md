@@ -76,3 +76,7 @@ Example:
 ## service templates
 Please check the services folder for examples of what a systemd service template should look like if you choose to run motion-poll or set-time as
 a service. By using environemnt files and templating, the user can handle multiple cameras with only one service file.
+
+## system-wide install
+A Makefile is provided in the project root that will make a system-wide install of the go binaries once compiled. It will then use the provided
+service templates to create systemd services for every compiled command and place it in a config folder that the user can specify.

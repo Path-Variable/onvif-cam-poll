@@ -9,7 +9,7 @@ Restart=always
 RestartSec=3
 User=${USER}
 Group=${USER}
-ExecStart=/bin/bash ${CONFIG_PATH}/motion.sh
+ExecStart=/bin/bash ${CONFIG_PATH}/goto.sh
 TimeoutStartSec=0
 
 [Install]

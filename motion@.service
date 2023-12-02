@@ -4,12 +4,12 @@ After=network.target
 
 [Service]
 Type=simple
-EnvironmentFile=${CONFIG_PATH}/%i.env
+EnvironmentFile=/home/isaric/.config/onvif-cam-poll/%i.env
 Restart=always
 RestartSec=3
-User=${USER}
-Group=${USER}
-ExecStart=/bin/bash ${CONFIG_PATH}/motion.sh
+User=isaric
+Group=isaric
+ExecStart=/bin/bash /home/isaric/.config/onvif-cam-poll/motion.sh
 TimeoutStartSec=0
 
 [Install]

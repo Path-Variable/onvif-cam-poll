@@ -1,0 +1,1 @@
+set-preset -a ${CAMERA_ADDRESS} -u ${CAMERA_USER} -p ${CAMERA_PASSWORD} -l 001
