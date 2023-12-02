@@ -24,11 +24,11 @@ event is created.
 Polling is the most common feature implemented, and it is the one that is utilized here. The cameras I have used in the making 
 of this script don't support subscription.
 
-In order to use the polling script you must provide the mandatory arguments or the script will fail immediately. These include the
-base url of the camera, auth details and a slack configuration for the bot we will use to post notifications.
+In order to use the polling script you must provide the mandatory arguments or the script will fail immediately. These 
+include the base url of the camera, auth details and a slack configuration for the bot we will use to post notifications.
 
-The script will then grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. There are more
-details in this guide [here](https://api.slack.com/methods/files.upload).
+The script will then grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. 
+There are more details in this guide [here](https://api.slack.com/methods/files.upload).
 
     
 After that we can use the compiled native executable. Example:
@@ -53,13 +53,14 @@ Example:
 
     ./set-time -a my-camera-url:1234 -u admin -p nimda -t 1
     
-As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
-its system clock with the servers.
+As with the previous script, this one keeps running and will post the current local time of the server to the camera, 
+thereby synchronizing its system clock with the servers.
 
 ### goto-preset
 
-The thrid script will move the camera to a predefined ptz preset. The purpose of this script is to counter tampering and accidental camera misalignment 
-due to power outages. Besides the authentication details, this script accepts the ptz preset name and the onvif profile name.
+The third script will move the camera to a predefined ptz preset. The purpose of this script is to counter tampering and 
+accidental camera misalignment due to power outages. Besides the authentication details, this script accepts the ptz preset 
+name and the onvif profile name.
 
 Example:
 
@@ -67,8 +68,8 @@ Example:
 
 ### set-preset
 
-The fourth script will record a ptz preset for the current position of the camera. It requires the authenticatino details, the preset name and, optionally,
-the onvif profile name.
+The fourth script will record a ptz preset for the current position of the camera. It requires the authentication details, 
+the preset name and, optionally, the onvif profile name.
 
 Example:
 
@@ -76,9 +77,11 @@ Example:
 
 
 ## Service Templates
-Please check the services folder for examples of what a systemd service template should look like if you choose to run motion-poll or set-time as
-a service. By using environemnt files and templating, the user can handle multiple cameras with only one service file.
+Please check the services folder for examples of what a systemd service template should look like if you choose to run 
+motion-poll or set-time as a service. By using environment files and templating, the user can handle multiple cameras 
+with only one service file.
 
 ## System-wide Install
-A Makefile is provided in the project root that will make a system-wide install of the go binaries once compiled. It will then use the provided
-service templates to create systemd services for every compiled command and place it in a config folder that the user can specify.
+A Makefile is provided in the project root that will make a system-wide install of the go binaries once compiled. It 
+will then use the provided service templates to create systemd services for every compiled command and place it in a 
+config folder that the user can specify.
