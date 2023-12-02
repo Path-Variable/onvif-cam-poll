@@ -1,4 +1,4 @@
-# onvif-cam-poll
+# Onvif-Cam-Poll
 
 [![Go](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml)
 
@@ -11,7 +11,9 @@ To install the scripts into your local gopath run:
 
 They will be placed inside the go/bin folder. Please make sure that GOPATH is defined beforehand.
 
-## motion-poll
+## Commands
+
+### motion-poll
 
 The ONVIF standard exposed a set of services on a camera. One of them is the events service. Cameras with motion detection
 capabilities publish motion events over this service. There exist two models with which to get events from an ONVIF camera.
@@ -36,7 +38,7 @@ After that we can use the compiled native executable. Example:
 With this command the script will keep running continuously and polling the camera. After it finds a motion event,
 it will post to the slack url specified and identify the camera as "garden".
 
-## set-time
+### set-time
 
 The second script deals with another problem when opting to use these cameras without a cloud provider - time synchronization.
 If cut off from access to the cloud, the cameras' system clock quickly falls out of sync with the world clock and is unable to 
@@ -54,7 +56,7 @@ Example:
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, thereby synchronizing
 its system clock with the servers.
 
-## goto-preset
+### goto-preset
 
 The thrid script will move the camera to a predefined ptz preset. The purpose of this script is to counter tampering and accidental camera misalignment 
 due to power outages. Besides the authentication details, this script accepts the ptz preset name and the onvif profile name.
@@ -63,7 +65,7 @@ Example:
 
     ./goto-preset -a my-camera-url:1234 -u admin -p nimda -t 1 -l 001 -r 000
 
-## set-preset
+### set-preset
 
 The fourth script will record a ptz preset for the current position of the camera. It requires the authenticatino details, the preset name and, optionally,
 the onvif profile name.
@@ -73,10 +75,10 @@ Example:
     ./set-preset -a my-camera-url:1234 -u admin -p nimda -l 003 -r 000
 
 
-## service templates
+## Service Templates
 Please check the services folder for examples of what a systemd service template should look like if you choose to run motion-poll or set-time as
 a service. By using environemnt files and templating, the user can handle multiple cameras with only one service file.
 
-## system-wide install
+## System-wide Install
 A Makefile is provided in the project root that will make a system-wide install of the go binaries once compiled. It will then use the provided
 service templates to create systemd services for every compiled command and place it in a config folder that the user can specify.
