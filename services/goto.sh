@@ -1,0 +1,1 @@
+goto-preset -a ${CAMERA_ADDRESS} -u ${CAMERA_USER} -p ${CAMERA_PASSWORD} -t 30 -l 001

@@ -1,11 +1,11 @@
-function check_var() {
+#!/bin/bash
+function check_var {
   declare -n var_ref=$1
-  declare -p "$var_ref" &>/dev/null
   declared=$?
-  if ["$declared" != 0 ]
+  if [ "$declared" != 0 ]
   then
     echo "$var_ref must be set! Exiting!"
-    exit
+    exit 1
   fi
 }
 

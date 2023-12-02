@@ -4,12 +4,12 @@ After=network.target
 
 [Service]
 Type=simple
-EnvironmentFile=${CONFIG_PATH}/%i.env
+EnvironmentFile=$path/%i.env
 Restart=always
 RestartSec=3
-User=${USER}
-Group=${USER}
-ExecStart=/bin/bash ${CONFIG_PATH}/motion.sh
+User=$SUDO_USER
+Group=$SUDO_USER
+ExecStart=/bin/bash $path/motion.sh
 TimeoutStartSec=0
 
 [Install]
