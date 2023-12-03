@@ -19,7 +19,8 @@ import (
 	onvif2 "github.com/use-go/onvif/xsd/onvif"
 )
 
-const commandName = "set-time"
+const commandName = "onvif-set-time"
+
 /*
 *
 Script for setting the date and time on an ONVIF camera- specifically designed for Hisseu cameras
@@ -47,7 +48,7 @@ func main() {
 		fmt.Printf(utils.CommandSend, commandName)
 		_, err := sdk.Call_SetSystemDateAndTime(context.TODO(), cam, req)
 		if err != nil {
-			fmt.Printf(utils.CommandError,commandName, err)
+			fmt.Printf(utils.CommandError, commandName, err)
 			return
 		}
 		fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)

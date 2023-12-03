@@ -16,7 +16,7 @@ import (
 	token "github.com/use-go/onvif/xsd/onvif"
 )
 
-const commandName = "goto-preset"
+const commandName = "onvif-goto-preset"
 
 /**
 Sends the camera to the target preset
@@ -38,10 +38,10 @@ func main() {
 			PresetToken:  token.ReferenceToken(opts.PositionPreset),
 			ProfileToken: token.ReferenceToken(opts.Profile),
 		}
-        fmt.Printf(utils.CommandSend, commandName)
+		fmt.Printf(utils.CommandSend, commandName)
 		_, err := sdk_ptz.Call_GotoPreset(context.TODO(), cam, gtreq)
 		if err != nil {
-			fmt.Printf(utils.CommandError,commandName, err)
+			fmt.Printf(utils.CommandError, commandName, err)
 			return
 		}
 		fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)

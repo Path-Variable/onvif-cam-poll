@@ -1,10 +1,10 @@
 package model
 
 type BasicParameters struct {
-	Username       string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
-	Password       string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
-	Address        string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
-	Profile 	   string `short:"r" long:"profile" description:"The onvif profile to be used" required:"false" default:"000"`
+	Username string `short:"u" long:"user" description:"The username for authenticating to the ONVIF device" required:"true"`
+	Password string `short:"p" long:"password" description:"The password for authenticating to the ONVIF device" required:"true"`
+	Address  string `short:"a" long:"address" description:"The address of the ONVIF device and its port separated by semicolon" required:"true"`
+	Profile  string `short:"r" long:"profile" description:"The onvif profile to be used" required:"false" default:"000"`
 }
 
 type SlackParameters struct {
@@ -18,9 +18,13 @@ type PresetParameters struct {
 }
 
 type CooldownParameters struct {
-	CooldownTimer   int    `short:"t" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"60"`
+	CooldownTimer int `short:"t" long:"cooldown" description:"The integer value of the number of seconds after an event has occurred before polling resumes" required:"false" default:"60"`
 }
 
 type CameraNameParameters struct {
-	CameraName      string `short:"n" long:"name" description:"The name or location of the ONVIF device that will appear in all notifications" required:"true"`
+	CameraName string `short:"n" long:"name" description:"The name or location of the ONVIF device that will appear in all notifications" required:"true"`
+}
+
+type InterfaceParameters struct {
+	Interface string `short:"i" long:"interface" description:"Prints a list of all discovered ONVIF devices on the specified interface" required:"true"`
 }

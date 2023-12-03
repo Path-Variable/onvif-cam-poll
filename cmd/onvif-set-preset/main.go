@@ -15,7 +15,7 @@ import (
 	token "github.com/use-go/onvif/xsd/onvif"
 )
 
-const commandName = "set-preset"
+const commandName = "onvif-set-preset"
 
 /**
 Records the current camera position on the passed preset token
@@ -42,7 +42,7 @@ func main() {
 	fmt.Printf(utils.CommandSend, commandName)
 	_, err = sdk_ptz.Call_SetPreset(context.TODO(), cam, gtreq)
 	if err != nil {
-		fmt.Printf(utils.CommandError,commandName, err)
+		fmt.Printf(utils.CommandError, commandName, err)
 		return
 	}
 

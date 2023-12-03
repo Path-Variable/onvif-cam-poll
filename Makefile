@@ -4,7 +4,7 @@ install:
 	## run go install
 	go install ./...
 	## create system-wide symlink to executables
-	bash ./install_scripts/create_symlinks.sh motion-poll set-preset goto-preset set-time
+	bash ./install_scripts/create_symlinks.sh onvif-motion-poll onvif-set-preset onvif-goto-preset onvif-set-time onvif-discover-all
 	## create config folder
 	bash ./install_scripts/create_service_templates.sh
 
