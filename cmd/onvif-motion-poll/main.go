@@ -25,6 +25,7 @@ Script for polling an ONVIF camera and getting motion events - specifically desi
 */
 
 const ssErrorTemplate = "Error while getting snapshot %s\n"
+const commandName = "onvif-motion-poll"
 
 func main() {
 	var opts options
@@ -38,7 +39,7 @@ func main() {
 	// make initial pull point subscription
 	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
 	res := &event.CreatePullPointSubscription{SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
-		InitialTerminationTime: event.AbsoluteOrRelativeTimeType {
+		InitialTerminationTime: event.AbsoluteOrRelativeTimeType{
 			Duration: "PT300S",
 		}}
 	_, err = cam.CallMethod(res)
@@ -56,7 +57,12 @@ func main() {
 
 	// continue polling for motion events. if motion is detected, send Slack notification
 	for {
-		r2, _ := cam.CallMethod(event.PullMessages{})
+		fmt.Printf(utils.CommandSend, commandName)
+		r2, err := cam.CallMethod(event.PullMessages{})
+		if err != nil {
+			fmt.Printf(utils.CommandError, commandName, err)
+			return
+		}
 		bodyBytes, _ := io.ReadAll(r2.Body)
 		bodyS := string(bodyBytes)
 		if strings.Contains(bodyS, "<tt:SimpleItem Name=\"IsMotion\" Value=\"true\" />") {
