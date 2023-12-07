@@ -13,7 +13,7 @@ They will be placed inside the go/bin folder. Please make sure that GOPATH is de
 
 ## Commands
 
-### motion-poll
+### onvif-motion-poll
 
 The ONVIF standard exposed a set of services on a camera. One of them is the events service. Cameras with motion detection
 capabilities publish motion events over this service. There exist two models with which to get events from an ONVIF camera.
@@ -33,12 +33,12 @@ There are more details in this guide [here](https://api.slack.com/methods/files.
     
 After that we can use the compiled native executable. Example:
 
-    ./motion-poll -a my-camera-url:1234 -u admin -p nimda -n garden -t 30 -b xoxb-slack-bot-token -c slack-channel-id
+    onvif-motion-poll -a my-camera-url:1234 -u admin -p nimda -n garden -t 30 -b xoxb-slack-bot-token -c slack-channel-id
     
 With this command the script will keep running continuously and polling the camera. After it finds a motion event,
 it will post to the slack url specified and identify the camera as "garden".
 
-### set-time
+### onvif-set-time
 
 The second script deals with another problem when opting to use these cameras without a cloud provider - time synchronization.
 If cut off from access to the cloud, the cameras' system clock quickly falls out of sync with the world clock and is unable to 
@@ -51,12 +51,12 @@ interval time expressed in minutes as an integer. After interval expires, the ti
     
 Example:
 
-    ./set-time -a my-camera-url:1234 -u admin -p nimda -t 1
+    onvif-set-time -a my-camera-url:1234 -u admin -p nimda -t 1
     
 As with the previous script, this one keeps running and will post the current local time of the server to the camera, 
 thereby synchronizing its system clock with the servers.
 
-### goto-preset
+### onvif-goto-preset
 
 The third script will move the camera to a predefined ptz preset. The purpose of this script is to counter tampering and 
 accidental camera misalignment due to power outages. Besides the authentication details, this script accepts the ptz preset 
@@ -64,17 +64,28 @@ name and the onvif profile name.
 
 Example:
 
-    ./goto-preset -a my-camera-url:1234 -u admin -p nimda -t 1 -l 001 -r 000
+    onvif-goto-preset -a my-camera-url:1234 -u admin -p nimda -t 1 -l 001 -r 000
 
-### set-preset
+### onvif-set-preset
 
 The fourth script will record a ptz preset for the current position of the camera. It requires the authentication details, 
 the preset name and, optionally, the onvif profile name.
 
 Example:
 
-    ./set-preset -a my-camera-url:1234 -u admin -p nimda -l 003 -r 000
+    onvif-set-preset -a my-camera-url:1234 -u admin -p nimda -l 003 -r 000
 
+### onvif-discover-all
+
+This script will run an onvif discovery broadcast on the interface specifed in the entry parameter. The interface must be
+specified by name. You cannot use a CIDR address to define it. If you are running this over Wireguard, it won't work as 
+Wireguard does not support broadcasting.
+
+Example:
+
+    onvif-discover-all -i wlo1
+
+The command will output the number of discovered devices along with their IP addresses.
 
 ## Service Templates
 Please check the services folder for examples of what a systemd service template should look like if you choose to run 
