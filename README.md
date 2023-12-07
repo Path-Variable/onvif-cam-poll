@@ -107,3 +107,6 @@ The commands are the same as when running any other systemd service.
 A Makefile is provided in the project root that will make a system-wide install of the go binaries once compiled. It 
 will then use the provided service templates to create systemd services for every compiled command and place it in a 
 config folder that the user can specify.
+
+The user can then place `.env` files into the config folder and run `systemctl` to start any of the command services with
+the name of the environment file. Be sure to enable any such services if you want them to run on restart!
