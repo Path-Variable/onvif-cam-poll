@@ -80,6 +80,17 @@ Example:
 Please check the services folder for examples of what a systemd service template should look like if you choose to run 
 motion-poll or set-time as a service. By using environment files and templating, the user can handle multiple cameras 
 with only one service file.
+For example, I will define my environment file `hallway.env` and place it in the configuration folder.
+In order to run `motion-poll` as a service I will execute the following command:
+
+    systemctl start motion@hallway
+
+This will use the `motion@.service` file and take all the relevant variables from the `hallway.env` file.
+If I want the service to restart when the server restarts I need to enable it.
+
+    systemctl enable motion@hallway
+
+The commands are the same as when running any other systemd service.
 
 ## System-wide Install
 A Makefile is provided in the project root that will make a system-wide install of the go binaries once compiled. It 
