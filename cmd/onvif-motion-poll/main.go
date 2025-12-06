@@ -94,9 +94,9 @@ func getAndUploadSnapshot(url, channelID string, slackClient slack.Client) {
 		return
 	}
 
-	_, err := slackClient.UploadFileV2Context(slack.UploadFileV2Parameters{
+	_, err := slackClient.UploadFileV2Context(context.Background(), slack.UploadFileV2Parameters{
 		Reader:   r.Body,
-		FileSize: r.ContentLength,
+		FileSize: int(r.ContentLength),
 		Filename: fmt.Sprintf("%s.png", time.Now().Format("20060102150405")),
 		Channel: channelID,
 	})
