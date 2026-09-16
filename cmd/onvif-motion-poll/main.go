@@ -1,114 +1,80 @@
+// Command onvif-motion-poll watches an ONVIF camera for motion events and
+// posts a Slack message plus a snapshot whenever one occurs. It runs until
+// SIGINT/SIGTERM and survives camera and network hiccups by re-subscribing.
 package main
 
 import (
 	"context"
-
-	"github.com/jessevdk/go-flags"
-	"github.com/path-variable/onvif-cam-poll/pkg/model"
-	"github.com/path-variable/onvif-cam-poll/pkg/utils"
-	"github.com/slack-go/slack"
-	"github.com/use-go/onvif"
-	"github.com/use-go/onvif/event"
-	"github.com/use-go/onvif/media"
-	sdk "github.com/use-go/onvif/sdk/media"
-
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"strings"
 	"time"
+
+	"github.com/path-variable/onvif-cam-poll/internal/backoff"
+	"github.com/path-variable/onvif-cam-poll/internal/camera"
+	"github.com/path-variable/onvif-cam-poll/internal/cli"
+	"github.com/path-variable/onvif-cam-poll/internal/motion"
+	"github.com/path-variable/onvif-cam-poll/internal/notify"
 )
 
-/**
-Script for polling an ONVIF camera and getting motion events - specifically designed for Hisseu cameras
-*/
+const (
+	pollInterval    = time.Second
+	subscriptionTTL = 5 * time.Minute
+	renewMargin     = 30 * time.Second
+	pullTimeout     = time.Second
+	messageLimit    = 10
+	retryMin        = 2 * time.Second
+	retryMax        = 2 * time.Minute
+)
 
-const ssErrorTemplate = "Error while getting snapshot %s\n"
-const commandName = "onvif-motion-poll"
+type options struct {
+	cli.Device
+	cli.CameraName
+	cli.Cooldown
+	cli.Slack
+}
 
 func main() {
 	var opts options
-	_, err := flags.ParseArgs(&opts, os.Args)
+	if err := cli.Parse(&opts); err != nil {
+		os.Exit(2)
+	}
+	log := cli.Logger().With("camera", opts.Name)
+	ctx, stop := cli.Context()
+	defer stop()
 
+	dev, err := camera.Connect(opts.Device)
 	if err != nil {
-		fmt.Printf(utils.ArgParseError, err)
-		return
+		log.Error("cannot connect", "err", err)
+		os.Exit(1)
 	}
-
-	// make initial pull point subscription
-	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
-	res := &event.CreatePullPointSubscription{SubscriptionPolicy: event.SubscriptionPolicy{ChangedOnly: true},
-		InitialTerminationTime: event.AbsoluteOrRelativeTimeType{
-			Duration: "PT300S",
-		}}
-	_, err = cam.CallMethod(res)
+	snapshotURL, err := camera.SnapshotURI(ctx, dev, opts.Profile)
 	if err != nil {
-		fmt.Printf("Aborting due to err when subscribing %s", err)
-		return
+		log.Warn("snapshots disabled", "err", err)
 	}
+	slack := notify.NewSlack(opts.BotToken, opts.ChannelID, log)
 
-	// retrieve the snapshot url
-	ssur, _ := sdk.Call_GetSnapshotUri(context.TODO(), cam, media.GetSnapshotUri{ProfileToken: "000"})
-	ssUrl := string(ssur.MediaUri.Uri)
-	fmt.Printf("Snapshot url is %s\n", ssUrl)
-
-	slackClient := slack.New(opts.SlackBotToken)
-
-	// continue polling for motion events. if motion is detected, send Slack notification
-	for {
-		fmt.Printf(utils.CommandSend, commandName)
-		r2, err := cam.CallMethod(event.PullMessages{})
-		if err != nil {
-			fmt.Printf(utils.CommandError, commandName, err)
-			return
-		}
-		bodyBytes, _ := io.ReadAll(r2.Body)
-		bodyS := string(bodyBytes)
-		if strings.Contains(bodyS, "<tt:SimpleItem Name=\"IsMotion\" Value=\"true\" />") {
-			msg := fmt.Sprintf(opts.MessageTemplate, opts.CameraName)
-			_, _, err = slackClient.PostMessage(opts.SlackChannelID, slack.MsgOptionText(msg, false))
-			if err != nil {
-				fmt.Printf("there was an error while posting the slack notification %s", err)
-			}
-			if ssUrl != "" && opts.SlackBotToken != "token" && opts.SlackChannelID != "" {
-				getAndUploadSnapshot(ssUrl, opts.SlackChannelID, *slackClient)
-			}
-			fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)
-			time.Sleep(time.Duration(opts.CooldownTimer) * time.Second)
-		}
-		time.Sleep(1 * time.Second)
+	poller := &motion.Poller{
+		Sub:             &motion.PullPoint{Dev: dev, TTL: subscriptionTTL, PullTimeout: pullTimeout, MessageLimit: messageLimit},
+		OnMotion:        func(ctx context.Context) { notifyMotion(ctx, slack, opts, snapshotURL, log) },
+		PollInterval:    pollInterval,
+		Cooldown:        opts.Cooldown.Duration(),
+		SubscriptionTTL: subscriptionTTL - renewMargin,
+		Backoff:         backoff.New(retryMin, retryMax),
+		Log:             log,
 	}
-
+	log.Info("polling for motion", "address", opts.Address, "cooldown", opts.Cooldown.Duration())
+	err = poller.Run(ctx)
+	log.Info("stopped", "reason", err)
 }
 
-func getAndUploadSnapshot(url, channelID string, slackClient slack.Client) {
-	r, e := http.Get(url)
-	if e != nil {
-		fmt.Printf(ssErrorTemplate, e)
+func notifyMotion(ctx context.Context, slack *notify.Slack, opts options, snapshotURL string, log interface{ Warn(string, ...any) }) {
+	if err := slack.Post(ctx, fmt.Sprintf(opts.MessageTemplate, opts.Name)); err != nil {
+		log.Warn("notification failed", "err", err)
+	}
+	if snapshotURL == "" {
 		return
 	}
-	defer r.Body.Close()
-	if e != nil {
-		fmt.Printf(ssErrorTemplate, e)
-		return
+	if err := slack.UploadSnapshot(ctx, snapshotURL); err != nil {
+		log.Warn("snapshot failed", "err", err)
 	}
-
-	_, err := slackClient.UploadFileV2Context(context.Background(), slack.UploadFileV2Parameters{
-		Reader:   r.Body,
-		FileSize: int(r.ContentLength),
-		Filename: fmt.Sprintf("%s.png", time.Now().Format("20060102150405")),
-		Channel: channelID,
-	})
-
-	if err != nil {
-		fmt.Printf("error while posting snapshot %s", err)
-	}
-}
-
-type options struct {
-	model.BasicParameters
-	model.CameraNameParameters
-	model.CooldownParameters
-	model.SlackParameters
 }

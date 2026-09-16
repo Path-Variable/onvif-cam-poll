@@ -1,61 +1,40 @@
+// Command onvif-discover-all lists the ONVIF devices answering WS-Discovery
+// probes on a network interface, repeating after every cooldown.
 package main
 
 import (
-	"fmt"
-	"github.com/jessevdk/go-flags"
-	"github.com/path-variable/onvif-cam-poll/pkg/model"
-	"github.com/path-variable/onvif-cam-poll/pkg/utils"
-	"github.com/use-go/onvif"
 	"os"
-	"strings"
-	"time"
+
+	"github.com/path-variable/onvif-cam-poll/internal/camera"
+	"github.com/path-variable/onvif-cam-poll/internal/cli"
 )
 
-const commandName = "onvif-discover-all"
+type options struct {
+	cli.Cooldown
+	cli.Interface
+}
 
 func main() {
-	var opts discoverAllOptions
-	_, err := flags.ParseArgs(&opts, os.Args)
-
-	if err != nil {
-		fmt.Printf(utils.ArgParseError, err)
-		return
+	var opts options
+	if err := cli.Parse(&opts); err != nil {
+		os.Exit(2)
 	}
+	log := cli.Logger()
+	ctx, stop := cli.Context()
+	defer stop()
 
 	for {
-		fmt.Printf(utils.CommandSend, commandName)
-		res, err := onvif.GetAvailableDevicesAtSpecificEthernetInterface(opts.Interface)
+		hosts, err := camera.Discover(opts.Interface.Name)
 		if err != nil {
-			fmt.Printf(utils.CommandError, commandName, err)
+			log.Warn("discovery failed", "err", err)
+		} else {
+			log.Info("discovery finished", "interface", opts.Interface.Name, "devices", len(hosts))
+			for _, host := range hosts {
+				log.Info("device", "address", host)
+			}
+		}
+		if !cli.Sleep(ctx, opts.Cooldown.Duration()) {
 			return
 		}
-
-		fmt.Printf("Discovered %d devices on interface %s\n", len(res), opts.Interface)
-
-		for i := 0; i < len(res); i++ {
-			dev := res[i]
-			fmt.Printf("Device at %s\n", getAddressFromServices(dev))
-		}
-
-		fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)
-		time.Sleep(time.Duration(opts.CooldownTimer) * time.Second)
 	}
-
-}
-
-func getAddressFromServices(device onvif.Device) string {
-	val, found := device.GetServices()["device"]
-	if found {
-		return getAddressFromUrl(val)
-	}
-	return ""
-}
-
-func getAddressFromUrl(url string) string {
-	return strings.Split(url, ":")[1][2:]
-}
-
-type discoverAllOptions struct {
-	model.CooldownParameters
-	model.InterfaceParameters
 }

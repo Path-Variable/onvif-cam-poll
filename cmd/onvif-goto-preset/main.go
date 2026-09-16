@@ -1,57 +1,47 @@
+// Command onvif-goto-preset keeps sending a camera back to a PTZ preset,
+// once per cooldown, until interrupted.
 package main
 
 import (
-	"context"
-	"fmt"
 	"os"
-	"time"
 
-	"github.com/path-variable/onvif-cam-poll/pkg/model"
-	"github.com/path-variable/onvif-cam-poll/pkg/utils"
-
-	"github.com/jessevdk/go-flags"
-	"github.com/use-go/onvif"
 	"github.com/use-go/onvif/ptz"
-	sdk_ptz "github.com/use-go/onvif/sdk/ptz"
-	token "github.com/use-go/onvif/xsd/onvif"
+	sdkptz "github.com/use-go/onvif/sdk/ptz"
+	xonvif "github.com/use-go/onvif/xsd/onvif"
+
+	"github.com/path-variable/onvif-cam-poll/internal/camera"
+	"github.com/path-variable/onvif-cam-poll/internal/cli"
 )
 
-const commandName = "onvif-goto-preset"
-
-/**
-Sends the camera to the target preset
-*/
-
-func main() {
-	var opts gotoPresetOptions
-	_, err := flags.ParseArgs(&opts, os.Args)
-
-	if err != nil {
-		fmt.Printf(utils.ArgParseError, err)
-		return
-	}
-
-	cam, _ := onvif.NewDevice(onvif.DeviceParams{Xaddr: opts.Address, Username: opts.Username, Password: opts.Password})
-	fmt.Printf(utils.ConnectionOK, opts.Address)
-	for {
-		gtreq := ptz.GotoPreset{
-			PresetToken:  token.ReferenceToken(opts.PositionPreset),
-			ProfileToken: token.ReferenceToken(opts.Profile),
-		}
-		fmt.Printf(utils.CommandSend, commandName)
-		_, err := sdk_ptz.Call_GotoPreset(context.TODO(), cam, gtreq)
-		if err != nil {
-			fmt.Printf(utils.CommandError, commandName, err)
-			return
-		}
-		fmt.Printf(utils.SleepTemplate, opts.CooldownTimer)
-		time.Sleep(time.Duration(opts.CooldownTimer) * time.Second)
-	}
-
+type options struct {
+	cli.Device
+	cli.Cooldown
+	cli.Preset
 }
 
-type gotoPresetOptions struct {
-	model.BasicParameters
-	model.CooldownParameters
-	model.PresetParameters
+func main() {
+	var opts options
+	if err := cli.Parse(&opts); err != nil {
+		os.Exit(2)
+	}
+	log := cli.Logger().With("address", opts.Address, "preset", opts.Token)
+	ctx, stop := cli.Context()
+	defer stop()
+
+	dev, err := camera.Connect(opts.Device)
+	if err != nil {
+		log.Error("cannot connect", "err", err)
+		os.Exit(1)
+	}
+	req := ptz.GotoPreset{PresetToken: xonvif.ReferenceToken(opts.Token), ProfileToken: xonvif.ReferenceToken(opts.Profile)}
+	for {
+		if _, err := sdkptz.Call_GotoPreset(ctx, dev, req); err != nil {
+			log.Warn("goto preset failed", "err", err)
+		} else {
+			log.Info("moved to preset")
+		}
+		if !cli.Sleep(ctx, opts.Cooldown.Duration()) {
+			return
+		}
+	}
 }

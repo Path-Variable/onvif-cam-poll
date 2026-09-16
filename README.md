@@ -1,15 +1,36 @@
 # Onvif-Cam-Poll
 
-[![Go](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/isaric/onvif-cam-poll/actions/workflows/go.yml)
+[![Go](https://github.com/Path-Variable/onvif-cam-poll/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/Path-Variable/onvif-cam-poll/actions/workflows/go.yml)
 
-Four golang scripts that provide ONVIF motion event polling and time/date setting. The scripts were created to allow 
-the use of IP cameras without using a cloud service as a middle man between the user and the camera(s).
-The script main files are located in the cmd folder.
-To install the scripts into your local gopath run:
+Five small Go programs for running ONVIF IP cameras without a vendor cloud in
+the middle: motion alerts to Slack with a snapshot, clock synchronisation for
+cameras that cannot reach NTP, PTZ preset handling and device discovery.
+
+They are built to run unattended. `onvif-motion-poll` keeps its event
+subscription alive, re-subscribes with exponential backoff when the camera or
+the network misbehaves, and stops cleanly on SIGINT/SIGTERM.
+
+## Install
 
     go install ./...
 
-They will be placed inside the go/bin folder. Please make sure that GOPATH is defined beforehand.
+The binaries land in `$(go env GOPATH)/bin`. `make install` additionally
+creates symlinks and systemd unit templates (see `install_scripts/`).
+
+## Credentials
+
+Every flag that carries a secret can also come from the environment, which
+keeps it out of `ps` and shell history:
+
+| Flag | Environment variable |
+|---|---|
+| `-u, --user` | `ONVIF_USER` |
+| `-p, --password` | `ONVIF_PASSWORD` |
+| `-a, --address` | `ONVIF_ADDRESS` |
+| `-b, --bot-token` | `SLACK_BOT_TOKEN` |
+| `-c, --channel-id` | `SLACK_CHANNEL_ID` |
+
+Run any command with `--help` for the full list.
 
 ## Commands
 
@@ -27,8 +48,9 @@ of this script don't support subscription.
 In order to use the polling script you must provide the mandatory arguments or the script will fail immediately. These 
 include the base url of the camera, auth details and a slack configuration for the bot we will use to post notifications.
 
-The script will then grab a snapshot from the camera and upload it to slack. The bot must have file upload privileges. 
-There are more details in this guide [here](https://api.slack.com/methods/files.upload).
+On every motion event the daemon posts the message and then fetches a snapshot from the camera and uploads it to the
+channel (the bot needs `files:write`). A snapshot that is not an image, for example a login page, is rejected rather
+than uploaded. Snapshot failures are logged and never stop the alert.
 
     
 After that we can use the compiled native executable. Example:
@@ -110,3 +132,27 @@ config folder that the user can specify.
 
 The user can then place `.env` files into the config folder and run `systemctl` to start any of the command services with
 the name of the environment file. Be sure to enable any such services if you want them to run on restart!
+
+## Behaviour under failure
+
+* `onvif-motion-poll` creates a pull-point subscription with a five-minute
+  lifetime and renews it 30 seconds before expiry. A failed pull or subscribe
+  is retried with exponential backoff (2 s doubling to 2 min); the process
+  never exits on its own.
+* The looping commands (`goto-preset`, `set-time`, `discover-all`) log a
+  failed call and try again after the cooldown instead of exiting.
+* `onvif-set-time` sends the clock in UTC together with a POSIX TZ string
+  (`CET-1CEST,M3.5.0,M10.5.0/3`) so the camera renders local time and
+  follows daylight-saving changes itself.
+* All output is structured logging on stderr (`log/slog`).
+
+## Development
+
+    go vet ./... && go test -race ./...
+    go run honnef.co/go/tools/cmd/staticcheck@latest ./...
+
+Layout: one `main` per command under `cmd/`, shared code under `internal/`:
+`cli` (flags, signals), `camera` (device calls), `motion` (event parsing and
+the poll loop), `notify` (Slack and snapshot fetching), `systime` (clock
+request), `backoff`. The poll loop is tested against a fake subscriber; the
+ONVIF calls themselves need a real camera.
